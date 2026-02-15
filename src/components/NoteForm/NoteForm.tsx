@@ -1,12 +1,13 @@
 import css from "./NoteForm.module.css";
+import type { Note } from "../../types/note";
 
 
-export default function NoteForm() {
+export default function NoteForm({ note }: { note?: Note }) {
     return (
         <form className={css.form}>
             <div className={css.formGroup}>
                 <label htmlFor="title">Title</label>
-                <input id="title" type="text" name="title" className={css.input} />
+                <input id="title" type="text" name="title" className={css.input} defaultValue={note?.title || ''} />
                 <span name="title" className={css.error} />
             </div>
 

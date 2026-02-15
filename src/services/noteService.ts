@@ -1,40 +1,45 @@
 import axios from 'axios';
-import type { Note } from '../types/notes';
+import type { Note } from '../types/note';
 
-// interface tmdbResponse {
-//   results: Movie[];
-//   total_pages: number;
-// }
+interface ApiResponse {
+  data: Note[];
+  totalPages: number;
+}
 
-// interface moviesResponce {
-//   movies: Movie[];
-//   totalPages: number;
-// }
+interface NewNote {
+  title: string;
+  content: string;
+  tag: string;
+}
 
-// export const fetchMovies = async (
-//   topic: string,
-//   page: number = 1,
-// ): Promise<moviesResponce> => {
-//   const response = await axios.get<tmdbResponse>(
-//     'https://api.themoviedb.org/3/search/movie',
-//     {
-//       params: {
-//         query: topic,
-//         page: page,
-//       },
-//       headers: {
-//         Authorization: `Bearer ${import.meta.env.VITE_TMDB_TOKEN}`,
-//       },
-//     },
-//   );
-//   return {
-//     movies: response.data.results,
-//     totalPages: response.data.total_pages,
-//   };
-// };
+const noteApi = axios.create({
+  baseURL: 'https://notehub-public.goit.study/api',
+  headers: {
+    Authorization: `Bearer ${import.meta.env.VITE_NOTEHUB_TOKEN}`,
+  },
+});
 
-export const fetchNotes = async();
+export const fetchNotes = async (
+  searchText: string,
+  page: number,
+  tag?: string,
+): Promise<ApiResponse> => {
+  const response = await noteApi.get<ApiResponse>('/notes', {
+    params: {
+      search: searchText,
+      page: page,
+      tag: tag,
+    },
+  });
+  return response.data;
+};
 
-export const createNote = async();
+export const createNote = async (newNote: NewNote) => {
+  const response = await noteApi.post<Note>('/notes', newNote);
+  return response.data;
+};
 
-export const deleteNote = async();
+export const deleteNote = async (noteId: string) => {
+  const response = await noteApi.delete<Note>(`/notes/${noteId}`);
+  return response.data;
+};
