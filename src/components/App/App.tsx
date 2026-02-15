@@ -32,7 +32,7 @@ export default function App() {
   const handleSelectNote = (note: Note) => {
     setSelectedNote(note);
   };
-  const notes = data?.data ?? [];
+  const notes = data?.notes ?? [];
 
   return (
     <div className={css.app}>
@@ -47,7 +47,7 @@ export default function App() {
         )}
         {<button className={css.button}>Create note +</button>}
       </header>
-      {selectedNote && <Modal note={selectedNote} onClose={closeModal} />}
+      {selectedNote && <Modal children={selectedNote} onClose={closeModal} />}
       {isSuccess && notes.length > 0 && (
         <NoteList notes={notes} onSelect={handleSelectNote} />
       )}

@@ -2,8 +2,9 @@ import axios from 'axios';
 import type { Note } from '../types/note';
 
 interface ApiResponse {
-  data: Note[];
+  notes: Note[];
   totalPages: number;
+  perPage: number;
 }
 
 interface NewNote {
@@ -21,14 +22,14 @@ const noteApi = axios.create({
 
 export const fetchNotes = async (
   searchText: string,
-  page: number,
-  tag?: string,
+  page: number = 1,
+  perPage: number = 12,
 ): Promise<ApiResponse> => {
   const response = await noteApi.get<ApiResponse>('/notes', {
     params: {
       search: searchText,
       page: page,
-      tag: tag,
+      perPage: perPage,
     },
   });
   return response.data;
