@@ -1,51 +1,132 @@
-import css from "./NoteForm.module.css";
-import type { Note } from "../../types/note";
+import css from './NoteForm.module.css';
+import { useId } from 'react';
+import { Formik, Form, Field, type FormikHelpers, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createNote } from '../../services/noteService';
 
+interface NoteFormProps {
+  onSuccess?: () => void;
+}
 
-export default function NoteForm({ note }: { note?: Note }) {
-    return (
-        <form className={css.form}>
-            <div className={css.formGroup}>
-                <label htmlFor="title">Title</label>
-                <input id="title" type="text" name="title" className={css.input} defaultValue={note?.title || ''} />
-                <span name="title" className={css.error} />
-            </div>
+interface NoteFormValues {
+  title: string;
+  content: string;
+  tag: string;
+}
 
-            <div className={css.formGroup}>
-                <label htmlFor="content">Content</label>
-                <textarea
-                    id="content"
-                    name="content"
-                    rows={8}
-                    className={css.textarea}
-                />
-                <span name="content" className={css.error} />
-            </div>
+const initialValues: NoteFormValues = {
+  title: '',
+  content: '',
+  tag: 'Todo',
+};
 
-            <div className={css.formGroup}>
-                <label htmlFor="tag">Tag</label>
-                <select id="tag" name="tag" className={css.select}>
-                    <option value="Todo">Todo</option>
-                    <option value="Work">Work</option>
-                    <option value="Personal">Personal</option>
-                    <option value="Meeting">Meeting</option>
-                    <option value="Shopping">Shopping</option>
-                </select>
-                <span name="tag" className={css.error} />
-            </div>
+const NoteFormSchema = Yup.object().shape({
+  title: Yup.string()
+    .min(3, 'Title must be at least 3 characters')
+    .max(50, 'Title is too long')
+    .required('Title is required'),
+  content: Yup.string()
+    .max(500, 'Content is too long')
+    .required('Content is required'),
+  tag: Yup.string()
+    .oneOf(
+      ['Todo', 'Work', 'Personal', 'Meeting', 'Shopping'],
+      'Invalid tag value',
+    )
+    .required('Tag is required'),
+});
 
-            <div className={css.actions}>
-                <button type="button" className={css.cancelButton}>
-                    Cancel
-                </button>
-                <button
-                    type="submit"
-                    className={css.submitButton}
-                    disabled=false
-                >
-                    Create note
-                </button>
-            </div>
-        </form>
-    );
+export default function NoteForm({ onSuccess }: NoteFormProps) {
+  const fieldId = useId();
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: createNote,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      onSuccess?.();
+    },
+  });
+
+  const handleSubmit = (
+    values: NoteFormValues,
+    actions: FormikHelpers<NoteFormValues>,
+  ) => {
+    mutation.mutate(values);
+    actions.resetForm();
+  };
+
+  return (
+    <Formik
+      initialValues={initialValues}
+      onSubmit={handleSubmit}
+      validationSchema={NoteFormSchema}
+    >
+      <Form className={css.form}>
+        <fieldset>
+          <div className={css.formGroup}>
+            <label htmlFor={`${fieldId}-title`}>Title</label>
+            <Field
+              id={`${fieldId}-title`}
+              type="text"
+              name="title"
+              className={css.input}
+            />
+            <ErrorMessage name="title" component="span" className={css.error} />
+          </div>
+
+          <div className={css.formGroup}>
+            <label htmlFor={`${fieldId}-content`}>Content</label>
+            <Field
+              id={`${fieldId}-content`}
+              name="content"
+              rows={8}
+              className={css.textarea}
+              as="textarea"
+            />
+            <ErrorMessage
+              name="content"
+              component="span"
+              className={css.error}
+            />
+          </div>
+
+          <div className={css.formGroup}>
+            <label htmlFor={`${fieldId}-tag`}>Tag</label>
+            <Field
+              id={`${fieldId}-tag`}
+              name="tag"
+              as="select"
+              className={css.select}
+            >
+              <option value="Todo">Todo</option>
+              <option value="Work">Work</option>
+              <option value="Personal">Personal</option>
+              <option value="Meeting">Meeting</option>
+              <option value="Shopping">Shopping</option>
+            </Field>
+            <ErrorMessage name="tag" component="span" className={css.error} />
+          </div>
+
+          <div className={css.actions}>
+            <button
+              type="button"
+              className={css.cancelButton}
+              onClick={onSuccess}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className={css.submitButton}
+              disabled={mutation.isPending}
+            >
+              {mutation.isPending ? 'Creating note...' : 'Create note'}
+            </button>
+          </div>
+        </fieldset>
+      </Form>
+    </Formik>
+  );
 }

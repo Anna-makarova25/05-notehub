@@ -31,7 +31,10 @@ export default function NoteList({ notes, onSelect }: NoteListProps) {
             <span className={css.tag}>{note.tag}</span>
             <button
               className={css.button}
-              onClick={() => mutation.mutate(note.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                mutation.mutate(note.id);
+              }}
             >
               Delete
             </button>

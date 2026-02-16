@@ -1,6 +1,5 @@
 import { createPortal } from 'react-dom';
 import css from './Modal.module.css';
-import type { Note } from '../../types/note';
 import { useEffect } from 'react';
 
 interface ModalProps {
@@ -32,10 +31,13 @@ export default function Modal({ children, onClose }: ModalProps) {
   }, [onClose]);
 
   return createPortal(
-    <div className={css.backdrop} role="dialog" aria-modal="true">
-      <div className={css.modal} onClick={handleBackdropClick}>
-        {children}
-      </div>
+    <div
+      className={css.backdrop}
+      role="dialog"
+      aria-modal="true"
+      onClick={handleBackdropClick}
+    >
+      <div className={css.modal}>{children}</div>
     </div>,
     document.body,
   );

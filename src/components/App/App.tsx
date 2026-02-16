@@ -9,11 +9,13 @@ import { fetchNotes } from '../../services/noteService';
 import { keepPreviousData } from '@tanstack/react-query';
 import { useDebouncedCallback } from 'use-debounce';
 import type { Note } from '../../types/note';
+import NoteForm from '../NoteForm/NoteForm';
 
 export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
-  const [selectedNote, setSelectedNote] = useState(null);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const handleSearch = useDebouncedCallback((query: string) => {
     setSearchQuery(query);
@@ -31,23 +33,39 @@ export default function App() {
 
   const handleSelectNote = (note: Note) => {
     setSelectedNote(note);
+    setIsFormOpen(false);
   };
+
   const notes = data?.notes ?? [];
+  const totalPages = data?.totalPages ?? 1;
+  const notePreview = selectedNote ? (
+    <div>
+      <h2>{selectedNote.title}</h2>
+      <p>{selectedNote.content}</p>
+      <span>{selectedNote.tag}</span>
+    </div>
+  ) : null;
 
   return (
     <div className={css.app}>
       <header className={css.toolbar}>
         {<SearchBox onSearch={handleSearch} />}
-        {data?.totalPages && data.totalPages > 1 && (
-          <Pagination
-            totalPages={data?.totalPages || 1}
-            page={page}
-            setPage={setPage}
-          />
+        {totalPages > 1 && (
+          <Pagination totalPages={totalPages} page={page} setPage={setPage} />
         )}
-        {<button className={css.button}>Create note +</button>}
+        {
+          <button className={css.button} onClick={() => setIsFormOpen(true)}>
+            Create note +
+          </button>
+        }
       </header>
-      {selectedNote && <Modal children={selectedNote} onClose={closeModal} />}
+      {selectedNote && <Modal onClose={closeModal} children={notePreview}></Modal>}
+      {isFormOpen && (
+        <Modal
+          onClose={() => setIsFormOpen(false)}
+          children={<NoteForm onSuccess={() => setIsFormOpen(false)} />}
+        />
+      )}
       {isSuccess && notes.length > 0 && (
         <NoteList notes={notes} onSelect={handleSelectNote} />
       )}
