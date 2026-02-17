@@ -6,7 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createNote } from '../../services/noteService';
 
 interface NoteFormProps {
-  onSuccess?: () => void;
+  onClose?: () => void;
 }
 
 interface NoteFormValues {
@@ -26,9 +26,7 @@ const NoteFormSchema = Yup.object().shape({
     .min(3, 'Title must be at least 3 characters')
     .max(50, 'Title is too long')
     .required('Title is required'),
-  content: Yup.string()
-    .max(500, 'Content is too long')
-    .required('Content is required'),
+  content: Yup.string().max(500, 'Content is too long'),
   tag: Yup.string()
     .oneOf(
       ['Todo', 'Work', 'Personal', 'Meeting', 'Shopping'],
@@ -37,7 +35,7 @@ const NoteFormSchema = Yup.object().shape({
     .required('Tag is required'),
 });
 
-export default function NoteForm({ onSuccess }: NoteFormProps) {
+export default function NoteForm({ onClose }: NoteFormProps) {
   const fieldId = useId();
   const queryClient = useQueryClient();
 
@@ -45,7 +43,7 @@ export default function NoteForm({ onSuccess }: NoteFormProps) {
     mutationFn: createNote,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
-      onSuccess?.();
+      onClose?.();
     },
   });
 
@@ -113,7 +111,7 @@ export default function NoteForm({ onSuccess }: NoteFormProps) {
             <button
               type="button"
               className={css.cancelButton}
-              onClick={onSuccess}
+              onClick={onClose}
             >
               Cancel
             </button>

@@ -8,13 +8,13 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchNotes } from '../../services/noteService';
 import { keepPreviousData } from '@tanstack/react-query';
 import { useDebouncedCallback } from 'use-debounce';
-import type { Note } from '../../types/note';
 import NoteForm from '../NoteForm/NoteForm';
+import ErrorMessage from '../ErrorMessage/ErrorMessage';
+import Loader from '../Loader/Loader';
 
 export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
-  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   const handleSearch = useDebouncedCallback((query: string) => {
@@ -22,29 +22,15 @@ export default function App() {
     setPage(1);
   }, 500);
 
-  const { data, isSuccess } = useQuery({
+  const { data, isSuccess, isLoading, isError } = useQuery({
     queryKey: ['notes', searchQuery, page],
     queryFn: () => fetchNotes(searchQuery, page),
     staleTime: 1000 * 60 * 5, // 5 minutes
     placeholderData: keepPreviousData,
   });
 
-  const closeModal = () => setSelectedNote(null);
-
-  const handleSelectNote = (note: Note) => {
-    setSelectedNote(note);
-    setIsFormOpen(false);
-  };
-
   const notes = data?.notes ?? [];
   const totalPages = data?.totalPages ?? 1;
-  const notePreview = selectedNote ? (
-    <div>
-      <h2>{selectedNote.title}</h2>
-      <p>{selectedNote.content}</p>
-      <span>{selectedNote.tag}</span>
-    </div>
-  ) : null;
 
   return (
     <div className={css.app}>
@@ -59,15 +45,14 @@ export default function App() {
           </button>
         }
       </header>
-      {selectedNote && <Modal onClose={closeModal} children={notePreview}></Modal>}
+      {isLoading && <Loader />}
+      {isError && <ErrorMessage />}
+      {isSuccess && notes.length > 0 && <NoteList notes={notes} />}
       {isFormOpen && (
         <Modal
           onClose={() => setIsFormOpen(false)}
-          children={<NoteForm onSuccess={() => setIsFormOpen(false)} />}
+          children={<NoteForm onClose={() => setIsFormOpen(false)} />}
         />
-      )}
-      {isSuccess && notes.length > 0 && (
-        <NoteList notes={notes} onSelect={handleSelectNote} />
       )}
     </div>
   );

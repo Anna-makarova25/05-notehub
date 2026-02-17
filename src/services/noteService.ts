@@ -4,7 +4,6 @@ import type { Note } from '../types/note';
 interface ApiResponse {
   notes: Note[];
   totalPages: number;
-  perPage: number;
 }
 
 interface NewNote {
